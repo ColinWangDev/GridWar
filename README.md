@@ -64,7 +64,7 @@ npm install
 npm run build
 ```
 
-Static assets are written to `frontend/dist/`. Serve that folder with a web server and configure it to **proxy `/api`** to the Spring Boot application so the browser can call the API on the same origin, or set an appropriate base URL in your deployment.
+Static assets are written to `frontend/dist/`. For production, set **`VITE_API_BASE_URL`** to your API origin (see [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)). Locally, leave it unset and use the Vite dev proxy to `localhost:8080`.
 
 ## Environment variables
 
@@ -75,11 +75,18 @@ Static assets are written to `frontend/dist/`. Serve that folder with a web serv
 | `DB_NAME` | Database name | `gridwar` |
 | `DB_USER` | Database user | `gridwar` |
 | `DB_PASSWORD` | Database password | `gridwar` |
-| `SERVER_PORT` | HTTP port for the API | `8080` |
+| `SERVER_PORT` | HTTP port for the API (local fallback) | `8080` |
+| `PORT` | HTTP port on Railway | (set by platform) |
+| `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` | Railway Postgres (linked service) | — |
+| `VITE_API_BASE_URL` | Frontend build: API origin (HTTPS, no trailing slash); unset locally | — |
 
 Gameplay tuning (Spring `application.yml`, prefix `gridwar.*`): grid size, max energy, regen interval, action cooldown, optional CAPTCHA threshold.
 
 **Season schedule:** Each season runs from **Monday 00:00 to the next Monday 00:00** in **Australia/Sydney** (AEST/AEDT). A scheduled job and startup logic roll the map when that boundary passes. Historical rows stay in `season_leaderboard_results`.
+
+## Deployment (Vercel + Railway)
+
+Step-by-step hosting for the frontend (Vercel) and API + PostgreSQL (Railway) is in **[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md)**.
 
 ## Database reference
 
@@ -104,6 +111,7 @@ GridWar/
 ├── backend/          # Spring Boot + Flyway
 ├── frontend/         # Vite + React
 ├── database/         # Schema reference SQL
+├── docs/             # Deployment guides
 ├── docker-compose.yml
 └── README.md
 ```

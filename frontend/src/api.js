@@ -1,3 +1,14 @@
+/** Production: set in Vercel to your Railway API origin, e.g. https://gridwar-api.up.railway.app (no trailing slash). */
+const API_BASE = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '')
+
+function apiUrl(apiPath) {
+  const p = apiPath.startsWith('/') ? apiPath : `/${apiPath}`
+  if (API_BASE) {
+    return `${API_BASE}/api${p}`
+  }
+  return `/api${p}`
+}
+
 async function parseError(res) {
   const text = await res.text()
   try {
@@ -12,7 +23,7 @@ export async function api(path, { playerId, method = 'GET', body } = {}) {
   const headers = {}
   if (playerId) headers['X-Player-Id'] = playerId
   if (body !== undefined) headers['Content-Type'] = 'application/json'
-  const res = await fetch(`/api${path}`, {
+  const res = await fetch(apiUrl(path), {
     method,
     headers,
     body: body !== undefined ? JSON.stringify(body) : undefined,
