@@ -1,0 +1,27 @@
+spring:
+  application:
+    name: gridwar-api
+  datasource:
+    url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:gridwar}
+    username: ${DB_USER:gridwar}
+    password: ${DB_PASSWORD:gridwar}
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    properties:
+      hibernate:
+        jdbc:
+          time_zone: UTC
+  flyway:
+    enabled: true
+
+server:
+  port: ${SERVER_PORT:8080}
+
+gridwar:
+  grid-size: 30
+  max-energy: 20
+  energy-regen-minutes: 5
+  action-cooldown-ms: 3000
+  captcha-after-actions: 40

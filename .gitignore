@@ -1,0 +1,9 @@
+**/target/
+**/node_modules/
+**/.idea/
+**/*.iml
+.DS_Store
+frontend/dist/
+.env
+.env.*
+*.log

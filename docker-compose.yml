@@ -1,0 +1,35 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: gridwar
+      POSTGRES_PASSWORD: gridwar
+      POSTGRES_DB: gridwar
+    ports:
+      - "5432:5432"
+    volumes:
+      - gridwar_pg:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U gridwar -d gridwar"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+  api:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    ports:
+      - "8080:8080"
+    environment:
+      DB_HOST: postgres
+      DB_PORT: 5432
+      DB_NAME: gridwar
+      DB_USER: gridwar
+      DB_PASSWORD: gridwar
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+volumes:
+  gridwar_pg:
