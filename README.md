@@ -77,7 +77,8 @@ Static assets are written to `frontend/dist/`. For production, set **`VITE_API_B
 | `DB_PASSWORD` | Database password | `gridwar` |
 | `SERVER_PORT` | HTTP port for the API (local fallback) | `8080` |
 | `PORT` | HTTP port on Railway | (set by platform) |
-| `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` | Railway Postgres (linked service) | — |
+| `DATABASE_URL` | Railway-style `postgresql://...` (parsed at startup) or unset locally | — |
+| `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` | Railway Postgres if not using `DATABASE_URL` | — |
 | `VITE_API_BASE_URL` | Frontend build: API origin (HTTPS, no trailing slash); unset locally | — |
 
 Gameplay tuning (Spring `application.yml`, prefix `gridwar.*`): grid size, max energy, regen interval, action cooldown, optional CAPTCHA threshold.

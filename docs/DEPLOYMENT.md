@@ -29,10 +29,10 @@ The browser talks to the **Railway API** directly (cross-origin). CORS is alread
 1. In the project, click **+ New** → **Database** → **PostgreSQL**.
 2. Wait until the database is provisioned.
 3. Open the **PostgreSQL** service → **Variables**. Railway exposes variables such as:
-   - `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE`
-   - Often `DATABASE_URL` as well  
+   - **`DATABASE_URL`** — full `postgresql://user:pass@host:port/dbname?...` (recommended for the API)
+   - `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` — individual fields  
 
-   The GridWar API is configured to read **`PGHOST` / `PGPORT` / `PGUSER` / `PGPASSWORD` / `PGDATABASE`** (with fallbacks to `DB_*` for local dev). You do not need to paste secrets by hand if you **link** the variables from the database into the API service (next step).
+   The GridWar API accepts **`DATABASE_URL`** (parsed automatically into JDBC) **or** the **`PG*`** / **`DB_*`** variables. If **none** of these exist on the **API** service, Spring falls back to `localhost:5432`, which fails on Railway with *Connection refused*.
 
 ### 3. Deploy the API (Spring Boot)
 
@@ -45,19 +45,19 @@ The browser talks to the **Railway API** directly (cross-origin). CORS is alread
    Note the public URL, e.g. `https://gridwar-api-production-xxxx.up.railway.app`.  
    **No trailing slash** when you use it in Vercel.
 
-4. **Variables** (API service) — connect the API to Postgres:
+4. **Variables** (API service) — connect the API to Postgres (**required**):
 
-   In the API service → **Variables** → **Add Variable** → **Reference** (or equivalent), and point each of these names at the **matching variable on your PostgreSQL service**:
+   **Easiest (recommended):** add **one** variable on the **API** service:
 
-   | Set on API service | Should reference database variable |
-   |--------------------|-------------------------------------|
-   | `PGHOST`           | Postgres `PGHOST` |
-   | `PGPORT`           | Postgres `PGPORT` |
-   | `PGUSER`           | Postgres `PGUSER` |
-   | `PGPASSWORD`       | Postgres `PGPASSWORD` |
-   | `PGDATABASE`       | Postgres `PGDATABASE` |
+   | Name on API service | Value |
+   |---------------------|--------|
+   | `DATABASE_URL` | **Reference** → your PostgreSQL service → `DATABASE_URL` |
 
-   Railway’s exact clicks change over time; the goal is that the API process receives the same `PG*` values the database exposes. If your database service uses different names, either rename in the Railway UI or set `DB_HOST`, `DB_PORT`, `DB_USER`, `DB_PASSWORD`, `DB_NAME` manually to match the JDBC URL you use locally.
+   That single reference is enough: the app parses `postgresql://...` and sets the JDBC URL, user, and password (and adds `sslmode=require` for non-local hosts when the URL has no query string).
+
+   **Alternative:** reference each of `PGHOST`, `PGPORT`, `PGUSER`, `PGPASSWORD`, `PGDATABASE` from the database service onto the API service with the **same names** (see table in earlier versions of this doc).
+
+   Common mistake: variables exist only on the **Postgres** service. They must also appear on the **API** service (via reference or copy), or the API will keep using `localhost` and crash with *Connection refused*.
 
    **Do not set `PORT` yourself** — Railway sets `PORT` for the HTTP listener. The app uses `server.port=${PORT:8080}`.
 
@@ -143,6 +143,7 @@ Each Git branch/PR can get a `*.vercel.app` URL. If `VITE_API_BASE_URL` is set o
 | Frontend loads but API errors / Network CORS | Railway URL wrong or API down; confirm `curl` to `/api/grid`. |
 | Frontend calls `vercel.app/api/...` (404) | `VITE_API_BASE_URL` missing or Preview env not set — rebuild. |
 | API crashes on boot | Logs: Flyway error, missing `PG*`, or DB not reachable. |
+| `Connection to localhost:5432 refused` | The API service has no `DATABASE_URL` / `PG*` / `DB_*`. Add a **reference** to Postgres `DATABASE_URL` on the API service (see Part A §3 step 4), then redeploy. |
 | 502 from Railway | App not listening on `$PORT`; confirm current `application.yml` uses `${PORT:...}`. |
 
 ---
@@ -159,6 +160,7 @@ Each Git branch/PR can get a `*.vercel.app` URL. If `VITE_API_BASE_URL` is set o
 | File | Role |
 |------|------|
 | `backend/Dockerfile` | Railway build/run image for the API |
+| `backend/.../DatabaseUrlEnvironmentPostProcessor.java` | Parses `DATABASE_URL` into JDBC settings |
 | `backend/src/main/resources/application.yml` | `PORT`, `PG*` / `DB_*` datasource |
 | `frontend/src/api.js` | `VITE_API_BASE_URL` for production API origin |
 | `frontend/vite.config.js` | Dev-only proxy to `localhost:8080` |
